@@ -1,7 +1,6 @@
 from fastapi import FastAPI
+from app.routes import router as item_router
 
 app = FastAPI()
 
-@app.get("/")
-def read_root():
-    return {"message":"Hello world"}
+app.include_router(item_router)
