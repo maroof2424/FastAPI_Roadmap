@@ -10,6 +10,6 @@ router = APIRouter()
 @router.post("/items/")
 def create_item(item: Item):
     return item
-@router.get("/items/{item_id}/",response_model=ItemOut)
+@router.get("/items/{item_id}/",response_model=ItemOut, tags=["Items"], summary="Get a specific item", description="Retrieve an item by its ID from the product catalog.")
 def read_item(item_id:int):
-    return{"name":"Laptop","price":"99.9","is_offer":True}
+    return{"name":"Laptop","price":"99.9","is_offer":True}  
