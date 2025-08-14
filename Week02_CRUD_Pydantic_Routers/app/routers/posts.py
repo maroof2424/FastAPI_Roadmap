@@ -1,17 +1,14 @@
 from fastapi import APIRouter
-
+from app import schemas,crud
 router = APIRouter(
     prefix="/posts",
     tags=["Posts"]
 )
 
-post_data = [
-    {"id":1,"title":"First Post","content":"This is my first blog post"},
-    {"id":2,"title":"Second Post","content":"Learning FastAPI is fun!"},
-]
-
-@router.get("/")
+@router.get("/",response_model=list[schemas.PostOut])
 def get_posts():
-    return {"status":"success","data":post_data}
+    return get_posts()
 
-    
+@router.get("/",response_model=schemas.PostOut)
+def create_post(post: schemas.PostCreate):
+    return crud.create_post(post)
