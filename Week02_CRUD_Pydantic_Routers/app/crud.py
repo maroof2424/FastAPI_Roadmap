@@ -13,4 +13,10 @@ def create_post(post:schemas.PostCreate):
     new_post = {'id':new_id,**post.dict()}
     post_data.append(new_post)
     return new_post
+
+def get_post_by_id(post_id:int):
+    for post in post_data:
+        if post["id"] == post_id:
+            return post
+    return None
     
