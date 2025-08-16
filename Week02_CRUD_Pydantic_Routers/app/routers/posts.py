@@ -16,6 +16,13 @@ def get_post(post_id:int):
         raise HTTPException(status_code=404, detail="Post not found")
     return post
 
-@router.get("/",response_model=schemas.PostOut)
+@router.post("/",response_model=schemas.PostOut)
 def create_post(post: schemas.PostCreate):
     return crud.create_post(post)
+
+@router.put("/{post_id}", response_model=schemas.PostOut)
+def updated_post(post_id: int,post: schemas.PostCreate):
+    updated_post = crud.update_post(post_id,post)
+    if not updated_post:
+        raise HTTPException(status_code=404,detail="Post not found")
+    return updated_post

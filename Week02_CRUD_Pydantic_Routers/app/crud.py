@@ -20,3 +20,11 @@ def get_post_by_id(post_id:int):
             return post
     return None
     
+
+def update_post(post_id: int, post: schemas.PostCreate):
+    existing_Post = get_post_by_id(post_id)
+    if existing_Post:
+        existing_Post.update(post.dict())
+        return existing_Post
+    return None
+
