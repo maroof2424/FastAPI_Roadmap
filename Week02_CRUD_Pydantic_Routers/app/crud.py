@@ -28,3 +28,9 @@ def update_post(post_id: int, post: schemas.PostCreate):
         return existing_Post
     return None
 
+def delete_post(post_id: int):
+    existing_post = get_post_by_id(post_id)
+    if existing_post:
+        post_data.remove(existing_post)
+        return True
+    return False

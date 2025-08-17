@@ -26,3 +26,10 @@ def updated_post(post_id: int,post: schemas.PostCreate):
     if not updated_post:
         raise HTTPException(status_code=404,detail="Post not found")
     return updated_post
+
+@router.delete("/{post_id}")
+def delete_post(post_id: int):
+    deleted = crud.delete_post(post_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Post not found")
+    return {"status": "success", "message": f"Post {post_id} deleted"}
