@@ -1,4 +1,4 @@
-from fastapi import APIRouter,HTTPException
+from fastapi import APIRouter,HTTPException,Query
 from app import schemas,crud
 router = APIRouter(
     prefix="/posts",
@@ -33,3 +33,10 @@ def delete_post(post_id: int):
     if not deleted:
         raise HTTPException(status_code=404, detail="Post not found")
     return {"status": "success", "message": f"Post {post_id} deleted"}
+
+@router.get("/search",response_model=list[schemas.PostOut])
+def search_posts(keyword: str = Query(..., min_length=1, description="Keyword to search in posts")):
+    results = crud.search_posts(keyword)
+    if not results:
+        raise HTTPException(status_code=404, detail="No posts found with this keyword")
+    return results

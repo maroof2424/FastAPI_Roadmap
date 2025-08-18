@@ -34,3 +34,10 @@ def delete_post(post_id: int):
         post_data.remove(existing_post)
         return True
     return False
+
+def search_posts(keyword:str):
+    results = []
+    for post in post_data:
+        if keyword.lower() in post["title"].lower() or keyword.lower() in post["content"].lower():
+            results.append(post)
+    return results
