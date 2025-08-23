@@ -18,6 +18,7 @@ def get_users(db:Session=Depends(get_db)):
 def read_user(user_id: int, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == user_id).first()
     return user
+    
 @router.post("/",response_model=schemas.UserOut)
 def create_user(user: schemas.UserCreate,db:Session=Depends(get_db)):
     new_user = models.User(username=user.username,email=user.email)
