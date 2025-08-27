@@ -1,4 +1,4 @@
-# 🗓️ **Week 3 – SQLAlchemy & Database Integration**
+# 🗓️ **Week 3 – SQLAlchemy & Database Integration **
 
 ---
 
