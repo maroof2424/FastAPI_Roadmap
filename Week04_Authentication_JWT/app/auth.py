@@ -1,60 +1,50 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
-import jwt
-from passlib.context import CryptContext
+from jose import JWTError, jwt
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.orm import Session
+from app import models, schemas, utils
+from app.database import SessionLocal
 
-from app import models, database
-
-router = APIRouter(
-    prefix="/auth",
-    tags=["Authentication"]
-)
-
-# Config (move to .env in real projects)
-SECRET_KEY = "your-secret-key"
+SECRET_KEY = "supersecretkey"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
-# 🔹 Verify user password
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
 
-# 🔹 Create JWT token
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     expire = datetime.utcnow() + (expires_delta or timedelta(minutes=15))
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-# 🔹 Login route
-@router.post("/token")
-def login(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(database.get_db)
+
+def authenticate_user(db: Session, username: str, password: str):
+    user = db.query(models.User).filter(models.User.username == username).first()
+    if not user or not utils.verify_password(password, user.password):
+        return None
+    return user
+
+
+def get_current_user(
+    token: str = Depends(oauth2_scheme), db: Session = Depends(SessionLocal)
 ):
-    # Step 1: Find user by email (form_data.username holds email)
-    user = db.query(models.User).filter(models.User.email == form_data.username).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials",
-        )
-
-    # Step 2: Verify password
-    if not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials",
-        )
-
-    # Step 3: Generate JWT token
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.email}, expires_delta=access_token_expires
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
     )
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+
+    user = db.query(models.User).filter(models.User.username == username).first()
+    if user is None:
+        raise credentials_exception
+    return user
