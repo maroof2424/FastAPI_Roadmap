@@ -6,9 +6,8 @@ router = APIRouter(
     tags=["Tasks"]
 )
 
-# Simulated email sender
 def send_email_background(email: str, message: str):
-    time.sleep(3)  # simulate delay (blocking)
+    time.sleep(3)  
     with open("sent_emails.log", "a") as f:
         f.write(f"Sent to {email}: {message}\n")
 
