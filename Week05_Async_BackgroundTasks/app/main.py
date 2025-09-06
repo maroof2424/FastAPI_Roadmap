@@ -1,9 +1,8 @@
 from fastapi import FastAPI
 from .endpoints import router as async_router
 from .db import engine, Base
-from . import demo
-from . import tasks  # 👈 import tasks router
-from . import models
+from . import demo,models,tasks,external
+
 
 app = FastAPI(title="Async FastAPI + SQLite")
 
@@ -14,4 +13,5 @@ async def startup():
 
 app.include_router(demo.router)
 app.include_router(async_router)
-app.include_router(tasks.router)  # 👈 include tasks router
+app.include_router(tasks.router) 
+app.include_router(external.router) 
