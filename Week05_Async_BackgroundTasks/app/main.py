@@ -3,7 +3,6 @@ from .endpoints import router as async_router
 from .db import engine, Base
 from . import demo,models,tasks,external
 
-
 app = FastAPI(title="Async FastAPI + SQLite")
 
 @app.on_event("startup")
