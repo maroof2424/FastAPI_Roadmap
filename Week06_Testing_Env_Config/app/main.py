@@ -1,15 +1,15 @@
 from fastapi import FastAPI, Depends
-from .config import settings
-from .dependencies import get_current_user
+from app.config import settings
+from app.dependencies import get_current_user
+from app.db import Base, engine
+from app.routers import users, posts
 
 app = FastAPI(title=settings.app_name)
 
-# Healthcheck
 @app.get("/")
 def healthcheck():
     return {"status": "ok"}
 
-# Show loaded configs
 @app.get("/config")
 def get_config():
     return {
@@ -18,7 +18,14 @@ def get_config():
         "database_url": settings.database_url,
     }
 
-# Protected route
 @app.get("/protected")
 async def protected_route(current_user: dict = Depends(get_current_user)):
     return {"message": f"Hello {current_user['username']}"}
+
+@app.on_event("startup")
+async def startup():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+app.include_router(users.router)
+app.include_router(posts.router)
