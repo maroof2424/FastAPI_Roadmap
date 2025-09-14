@@ -16,6 +16,8 @@ def get_config():
         "app_name": settings.app_name,
         "debug": settings.debug,
         "database_url": settings.database_url,
+        "secret_key": settings.secret_key,   # ❌ don’t expose in prod
+        "algorithm": settings.algorithm,
     }
 
 @app.get("/protected")
