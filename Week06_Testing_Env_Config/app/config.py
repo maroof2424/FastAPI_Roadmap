@@ -1,6 +1,8 @@
+import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
+    env: str = "dev"
     app_name: str = "FastAPI App"
     debug: bool = False
     database_url: str
@@ -10,4 +12,10 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-settings = Settings()
+def get_settings():
+    env = os.getenv("ENV", "dev")
+    if env == "test":
+        return Settings(_env_file=".env.test")
+    return Settings()
+
+settings = get_settings()
