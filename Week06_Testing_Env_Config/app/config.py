@@ -10,12 +10,15 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(extra="ignore")
 
 def get_settings():
     env = os.getenv("ENV", "dev")
     if env == "test":
         return Settings(_env_file=".env.test")
-    return Settings()
+    elif env == "prod":
+        return Settings(_env_file=".env.prod")
+    return Settings(_env_file=".env")
 
 settings = get_settings()
+
