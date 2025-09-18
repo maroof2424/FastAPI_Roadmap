@@ -1,42 +1,105 @@
-from fastapi import FastAPI,HTTPException
+from fastapi import FastAPI, Depends, HTTPException
+from sqlalchemy import Column, Integer, String
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
 from pydantic import BaseModel
+from typing import List
 
-app = FastAPI()
+# ---------- Database ----------
+DATABASE_URL = "postgresql+asyncpg://maroof:secret@db:5432/fastapi_db"
 
-class Post(BaseModel):
-    author: str
-    title: str
-    description: str
+engine = create_async_engine(DATABASE_URL, echo=True, future=True)
+async_session_maker = sessionmaker(
+    engine, class_=AsyncSession, expire_on_commit=False
+)
 
-posts_db = {}
+Base = declarative_base()
 
-@app.get("/")
-def read_posts():
-    return posts_db
 
-@app.post("/posts/")
-def create_post(post: Post):
-    post_id = len(posts_db) + 1
-    posts_db[post_id] = post
-    return {"id":post_id,"post":post}
+async def get_db():
+    async with async_session_maker() as session:
+        yield session
 
-@app.get("/posts/{post_id}")
-def read_post(post_id:int):
-    if post_id not in posts_db:
-        raise HTTPException(status_code=404,detail="Post not found")
-    return {"id":post_id,"post":posts_db[post_id]}
 
-@app.put("/posts/{post_id}")
-def update_post(post_id:int, update_post:Post):
-    if post_id not in posts_db:
-        raise HTTPException(status_code=404,detail="Post not found")
-    posts_db[post_id] = update_post
-    return {"id":post_id,"post":update_post}
+# ---------- Models ----------
+class Item(Base):
+    __tablename__ = "items"
 
-@app.delete("/posts/{post_id}")
-def delete_post(post_id:int, update_post:Post):
-    if post_id not in posts_db:
-        raise HTTPException(status_code=404,detail="Post not found")
-    del posts_db[post_id]
-    return {"message":f"Post {post_id} deleted successfully"}
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, index=True)
+    description = Column(String, nullable=True)
 
+
+# ---------- Schemas ----------
+class ItemCreate(BaseModel):
+    name: str
+    description: str | None = None
+
+
+class ItemOut(BaseModel):
+    id: int
+    name: str
+    description: str | None
+
+    class Config:
+        orm_mode = True
+
+
+# ---------- App ----------
+app = FastAPI(title="FastAPI CRUD Example")
+
+
+@app.on_event("startup")
+async def startup():
+    """Create tables on startup"""
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+
+# ---------- CRUD Routes ----------
+@app.post("/items/", response_model=ItemOut)
+async def create_item(item: ItemCreate, db: AsyncSession = Depends(get_db)):
+    new_item = Item(name=item.name, description=item.description)
+    db.add(new_item)
+    await db.commit()
+    await db.refresh(new_item)
+    return new_item
+
+
+@app.get("/items/", response_model=List[ItemOut])
+async def get_items(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(Item.__table__.select())
+    return result.scalars().all()
+
+
+@app.get("/items/{item_id}", response_model=ItemOut)
+async def get_item(item_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.get(Item, item_id)
+    if not result:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return result
+
+
+@app.put("/items/{item_id}", response_model=ItemOut)
+async def update_item(item_id: int, item: ItemCreate, db: AsyncSession = Depends(get_db)):
+    db_item = await db.get(Item, item_id)
+    if not db_item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    db_item.name = item.name
+    db_item.description = item.description
+    await db.commit()
+    await db.refresh(db_item)
+    return db_item
+
+
+@app.delete("/items/{item_id}")
+async def delete_item(item_id: int, db: AsyncSession = Depends(get_db)):
+    db_item = await db.get(Item, item_id)
+    if not db_item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    await db.delete(db_item)
+    await db.commit()
+    return {"message": "Item deleted successfully"}
