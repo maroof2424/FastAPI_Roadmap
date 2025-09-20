@@ -171,22 +171,7 @@
 
 ---
 
-### ✅ **Week 8: CI/CD + Performance Tuning**
 
-**Goals:**
-
-* Automate testing/deployment
-* Optimize for performance
-
-**Topics:**
-
-* GitHub Actions CI
-* Load testing with `locust`
-* Caching strategies (Redis)
-* Monitoring (Prometheus + Grafana)
-* Logging best practices
-
-**Build:**
 
 * GitHub CI to run `pytest` + lint on every push
 * Instrumentation for metrics
