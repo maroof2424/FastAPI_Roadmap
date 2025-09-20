@@ -1,13 +1,14 @@
 from fastapi import FastAPI, Depends, HTTPException
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, select
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from pydantic import BaseModel
 from typing import List
+from .config import settings
 
 # ---------- Database ----------
-DATABASE_URL = "postgresql+asyncpg://maroof:secret@db:5432/fastapi_db"
+DATABASE_URL = settings.database_url
 
 engine = create_async_engine(DATABASE_URL, echo=True, future=True)
 async_session_maker = sessionmaker(
@@ -43,11 +44,11 @@ class ItemOut(BaseModel):
     description: str | None
 
     class Config:
-        orm_mode = True
+        from_attributes = True   # ✅ Pydantic v2 fix
 
 
 # ---------- App ----------
-app = FastAPI(title="FastAPI CRUD Example")
+app = FastAPI(title="FastAPI CRUD with SQLite")
 
 
 @app.on_event("startup")
@@ -69,7 +70,7 @@ async def create_item(item: ItemCreate, db: AsyncSession = Depends(get_db)):
 
 @app.get("/items/", response_model=List[ItemOut])
 async def get_items(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(Item.__table__.select())
+    result = await db.execute(select(Item))
     return result.scalars().all()
 
 

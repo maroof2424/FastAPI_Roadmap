@@ -1,10 +1,6 @@
 fastapi
 uvicorn[standard]
 sqlalchemy[asyncio]
-asyncpg
-alembic
-python-dotenv
+pydantic
 pydantic-settings
-httpx
-pytest
-pytest-asyncio
+aiosqlite
