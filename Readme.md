@@ -1,4 +1,4 @@
-# 🗓️ FastAPI Learning Plan – Week-by-Week (8 Weeks)
+# 🗓️ FastAPI Learning Plan – Week-by-Week (7 Weeks)
 
 ---
 
