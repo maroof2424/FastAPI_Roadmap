@@ -104,3 +104,8 @@ async def delete_item(item_id: int, db: AsyncSession = Depends(get_db)):
     await db.delete(db_item)
     await db.commit()
     return {"message": "Item deleted successfully"}
+import os
+import uvicorn
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
