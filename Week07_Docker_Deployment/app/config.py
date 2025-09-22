@@ -1,7 +1,11 @@
+# app/config.py
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    database_url: str = "sqlite+aiosqlite:///./test.db"  # ✅ SQLite default
+    app_name: str = "FastAPI App"
+    debug: bool = False
+    secret_key: str
+    database_url: str
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
